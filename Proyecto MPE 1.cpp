@@ -3,8 +3,9 @@
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
-#include <tuple>
 #include <utility>
+#include <fstream>
+#include <bits/stdc++.h>
 using namespace std;
 
 #define NUM_FILAS 16
@@ -137,7 +138,7 @@ class Capa{
 	void entrenar(vector<pair<vector<vector<int>>, vector<int>>> ER){
 		int pos;
 		for(int n = 0; n < 500; n++){
-			pos = rand() % 5 + 0;
+			pos = rand() % (ER.size()) + 0;
 			procesar(ER[pos].first);
 			for(int i = 0; i < 4; i++){
 				if(salida[i] != ER[pos].second[i]){
@@ -164,6 +165,56 @@ Capa::Capa(int n){
 		neuronas.push_back(nueva_neurona);
 	}
 }
+
+vector<int> getResultadoEsperadoDeNombreDeArchivo(string filepath){
+	if(filepath == "./a.txt"){
+		return {1,0,0,0,0};
+	}
+	else if(filepath == "./e.txt"){
+		return {0,1,0,0,0};
+	}
+	else if(filepath == "./i.txt"){
+		return {0,0,1,0,0};
+	}
+	else if(filepath == "./o.txt"){
+		return {0,0,0,1,0};
+	}
+	else if(filepath == "./u.txt"){
+		return {0,0,0,0,1};
+	}
+}
+
+vector<pair<vector<vector<int>>, vector<int>>> leerEjemplos(string filepath){
+	vector<pair<vector<vector<int>>, vector<int>>> ER;
+	vector<vector<int>> matriz;
+	
+	ifstream archivo_entrada;
+	archivo_entrada.open(filepath);
+	string linea;
+	int i , j = 0;
+	while(getline(archivo_entrada, linea)){
+		if(linea != "&"){
+			stringstream ss (linea);
+			string digito;
+			j = 0;
+			vector<int> fila;
+			while(std::getline(ss, digito, ' ')){
+				fila.push_back(stoi(digito)); 
+				j++;
+			}
+			matriz.push_back(fila);
+			i++;
+		}else{
+			i = 0;
+			vector<int> vector_esperado = getResultadoEsperadoDeNombreDeArchivo(filepath);
+			pair<vector<vector<int>>, vector<int>> par(matriz, vector_esperado);
+			ER.push_back(par);
+			matriz.clear();
+		}
+	}
+	return ER;
+}
+
 
 void resultadoFinal(int pos_max){
 	switch (pos_max){
@@ -390,12 +441,17 @@ int main(){
 	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	};
-
+	/*
 	pair<vector<vector<int>>, vector<int>> par_a(entrada_a, {1,0,0,0,0});
 	pair<vector<vector<int>>, vector<int>> par_e(entrada_e, {0,1,0,0,0});
 	pair<vector<vector<int>>, vector<int>> par_i(entrada_i, {0,0,1,0,0});
 	pair<vector<vector<int>>, vector<int>> par_o(entrada_o, {0,0,0,1,0});
 	pair<vector<vector<int>>, vector<int>> par_u(entrada_u, {0,0,0,0,1});
+	pair<vector<vector<int>>, vector<int>> par_a_kevin(entrada_a_kevin, {1,0,0,0,0});
+	pair<vector<vector<int>>, vector<int>> par_e_kevin(entrada_e_kevin, {0,1,0,0,0});
+	pair<vector<vector<int>>, vector<int>> par_i_kevin(entrada_i_kevin, {0,0,1,0,0});
+	pair<vector<vector<int>>, vector<int>> par_o_kevin(entrada_o_kevin, {0,0,0,1,0});
+	pair<vector<vector<int>>, vector<int>> par_u_kevin(entrada_u_kevin, {0,0,0,0,1});
 	
 	
 	vector<pair<vector<vector<int>>, vector<int>>> ER =
@@ -404,56 +460,57 @@ int main(){
 		par_e,
 		par_i,
 		par_o,
-		par_u
+		par_u,
+		par_a_kevin,
+		par_e_kevin,
+		par_i_kevin,
+		par_o_kevin,
+		par_u_kevin
 	};
+	*/
 	
+	vector<pair<vector<vector<int>>, vector<int>>> vectorER;
+	vectorER = leerEjemplos("./a.txt");
 	
+	vector<vector<int>> matriz = vectorER[0].first;
+	//cout << "Juan";
+	for(int i = 0; i < NUM_FILAS; i++){
+		//cout << "Jose";
+		for(int j = 0; j < NUM_COLUMNAS; j++){
+			//cout << "Velazquez";
+			cout << matriz[i][j] << " ";
+			//cout << "Lares";
+		}
+		cout << endl;
+	}
 	
-	Capa capa = Capa(5);
-	cout << "Procesando letra a" << endl;
-	capa.procesar(entrada_a);
-	resultadoFinal(capa.getMaximoResultado());
+	cout << endl;
 	
-	cout << "Procesando letra e" << endl;
-	capa.procesar(entrada_e);
-	resultadoFinal(capa.getMaximoResultado());
+	vector<int> salidaEsperada = vectorER[0].second;
+	for(int i = 0; i < 5; i++){
+		cout << salidaEsperada[i] << " ";
+	}
 	
-	cout << "Procesando letra i" << endl;
-	capa.procesar(entrada_i);
-	resultadoFinal(capa.getMaximoResultado());
+	cout << endl;
 	
-	cout << "Procesando letra o" << endl;
-	capa.procesar(entrada_o);
-	resultadoFinal(capa.getMaximoResultado());
+	matriz = vectorER[1].first;
+	//cout << "Juan";
+	for(int i = 0; i < NUM_FILAS; i++){
+		//cout << "Jose";
+		for(int j = 0; j < NUM_COLUMNAS; j++){
+			//cout << "Velazquez";
+			cout << matriz[i][j] << " ";
+			//cout << "Lares";
+		}
+		cout << endl;
+	}
 	
-	cout << "Procesando letra u" << endl;
-	capa.procesar(entrada_u);
-	resultadoFinal(capa.getMaximoResultado());
+	cout << endl;
 	
-	cout << endl << "Entrenando..." << endl ;
-	capa.entrenar(ER);
-	cout << "Fin del Entrenamiento" << endl << endl;
-	
-	cout << "Procesando letra a" << endl;
-	capa.procesar(entrada_a);
-	resultadoFinal(capa.getMaximoResultado());
-	
-	cout << "Procesando letra e" << endl;
-	capa.procesar(entrada_e);
-	resultadoFinal(capa.getMaximoResultado());
-	
-	cout << "Procesando letra i" << endl;
-	capa.procesar(entrada_i);
-	resultadoFinal(capa.getMaximoResultado());
-	
-	cout << "Procesando letra o" << endl;
-	capa.procesar(entrada_o);
-	resultadoFinal(capa.getMaximoResultado());
-	
-	cout << "Procesando letra u" << endl;
-	capa.procesar(entrada_u);
-	resultadoFinal(capa.getMaximoResultado());
-	
+	salidaEsperada = vectorER[1].second;
+	for(int i = 0; i < 5; i++){
+		cout << salidaEsperada[i] << " ";
+	}
 	
 	return 0;
 }
