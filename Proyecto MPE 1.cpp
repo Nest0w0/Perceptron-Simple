@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <tuple>
+#include <utility>
 using namespace std;
 
 #define NUM_FILAS 16
@@ -18,19 +19,19 @@ class Perceptron{
 	public:
 		Perceptron(double u, double r);
 		
-		double suma(int entradas[NUM_FILAS][NUM_COLUMNAS]){
+		double suma(vector<vector<int>> entrada){
 			double sumatoria = 0;
 			
-			for(int i = 0; i < NUM_FILAS; i++){
-				for(int j = 0; j < NUM_COLUMNAS; j++){
-					sumatoria += entradas[i][j]*pesos[i][j];
+			for(int i = 0; i < entrada.size(); i++){
+				for(int j = 0; j < entrada[i].size(); j++){
+					sumatoria += entrada[i][j]*pesos[i][j];
 				}
 			}
 			
-			return sumatoria - umbral;
+			return sumatoria + umbral;
 		}
 		
-		double salida(int entradas[NUM_FILAS][NUM_COLUMNAS]){
+		double salida(vector<vector<int>> entradas){
 			return sigmoide(suma(entradas));
 		}
 		
@@ -38,10 +39,10 @@ class Perceptron{
 			return 1/(1 + exp(-sumatoria));
 		}
 		
-		void ajustarPesos(int valor_esperado, int valor_obtenido, int entradas[NUM_FILAS][NUM_COLUMNAS]){
+		void ajustarPesos(int valor_esperado, int valor_obtenido, vector<vector<int>> entrada){
 			for(int i = 0; i < NUM_FILAS; i++){
-				for(int j = 0; j < NUM_FILAS; j++){
-					pesos[i][j] += entradas[i][j]*razon_aprendizaje*(valor_esperado - valor_obtenido);
+				for(int j = 0; j < NUM_COLUMNAS; j++){
+					pesos[i][j] += entrada[i][j]*razon_aprendizaje*(valor_esperado - valor_obtenido);
 				}
 			}
 		}
@@ -74,6 +75,8 @@ Perceptron::Perceptron(double u, double r){
 	}
 }
 
+
+
 class Capa{
 	int numero_neuronas;
 	vector<Perceptron> neuronas;
@@ -83,16 +86,17 @@ class Capa{
 	public:
 		Capa(int numero_neuronas);
 		
-	void procesar(int entrada[NUM_FILAS][NUM_COLUMNAS]){
+	void procesar(vector<vector<int>> entrada){
 		vector<double> nuevo_resultado;
 		for(int i = 0; i < numero_neuronas; i++){
 			nuevo_resultado.push_back(neuronas[i].salida(entrada));
 		}
 		resultado = nuevo_resultado;
+		procesarResultadoASalida(getMaximoResultado());
 	}
 	
-	int getMaximaSalida(){
-		double maxima = -9.9;
+	int getMaximoResultado(){
+		double maxima = -RAND_MAX;
 		int posicion_maxima = 0;
 		for(int i = 0; i < numero_neuronas; i++){
 			if(resultado[i] > maxima){
@@ -130,6 +134,19 @@ class Capa{
 	}
 	
 	
+	void entrenar(vector<pair<vector<vector<int>>, vector<int>>> ER){
+		int pos;
+		for(int n = 0; n < 500; n++){
+			pos = rand() % 5 + 0;
+			procesar(ER[pos].first);
+			for(int i = 0; i < 4; i++){
+				if(salida[i] != ER[pos].second[i]){
+					neuronas[i].ajustarPesos(ER[pos].second[i], salida[i], ER[pos].first);
+				}
+			}
+		}
+	}
+	
 	vector<Perceptron> getNeuronas(){
 		return neuronas;
 	}
@@ -143,7 +160,7 @@ Capa::Capa(int n){
 	numero_neuronas = n;
 	
 	for(int i = 0; i < numero_neuronas; i++){
-		Perceptron nueva_neurona = Perceptron(50.0, 0.07);
+		Perceptron nueva_neurona = Perceptron(0.0, 0.07);
 		neuronas.push_back(nueva_neurona);
 	}
 }
@@ -170,8 +187,9 @@ void resultadoFinal(int pos_max){
 
 int main(){
 	srand(time(NULL));
+	//srand(42);
 	
-	int entrada_a[NUM_FILAS][NUM_COLUMNAS] = 
+	vector<vector<int>> entrada_a = 
 	{
 	{0,0,0,0,0,0,0,0,0,0},
 	{0,0,0,0,0,0,0,0,0,0},
@@ -192,7 +210,7 @@ int main(){
 	};
 	
 	
-	int entrada_e[NUM_FILAS][NUM_COLUMNAS] = 
+	vector<vector<int>> entrada_e = 
 	{
 	{0,0,0,0,0,0,0,0,0,0},
 	{0,0,0,0,0,0,0,0,0,0},
@@ -212,7 +230,7 @@ int main(){
 	{0,0,0,0,0,0,0,0,0,0}
 	};
 	
-	int entrada_i[NUM_FILAS][NUM_COLUMNAS] = 
+	vector<vector<int>> entrada_i = 
 	{
 	{0,0,0,0,0,0,0,0,0,0},
 	{0,0,0,0,0,0,0,0,0,0},
@@ -232,7 +250,7 @@ int main(){
 	{0,0,0,0,0,0,0,0,0,0}
 	};
 	
-	int entrada_o[NUM_FILAS][NUM_COLUMNAS] = 
+	vector<vector<int>> entrada_o = 
 	{
 	{0,0,0,0,0,0,0,0,0,0},
 	{0,0,0,0,0,0,0,0,0,0},
@@ -252,7 +270,7 @@ int main(){
 	{0,0,0,0,0,0,0,0,0,0}
 	};
 	
-	int entrada_u[NUM_FILAS][NUM_COLUMNAS] = 
+	vector<vector<int>> entrada_u = 
 	{
 	{0,0,0,0,0,0,0,0,0,0},
 	{0,0,0,0,0,0,0,0,0,0},
@@ -272,13 +290,170 @@ int main(){
 	{0,0,0,0,0,0,0,0,0,0}
 	};
 	
-	tuple<int, float> tupla(2, 0.5);
-	cout << get<0>(tupla) << endl;
-	cout << get<1>(tupla) << endl;
 	
+	vector<vector<int>> entrada_a_kevin =
+	{
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+	{0, 1, 1, 1, 0, 0, 1, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 1, 0, 0, 1, 1, 1, 0},
+	{0, 0, 1, 1, 1, 1, 1, 1, 1, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 1, 1},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	};
 	
-	vector<int> salida_a = {1,0,0,0,0};
-	tuple<vector<int>, vector<int>> juan({1,2,3,4,5}, salida_a);
+	vector<vector<int>> entrada_e_kevin =
+	{
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+	{0, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0, 0, 1, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+	{0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	};
+	
+	vector<vector<int>> entrada_i_kevin =
+	{
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	};
+	
+	vector<vector<int>> entrada_o_kevin =
+	{
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+	{0, 1, 1, 1, 0, 0, 1, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 1, 0, 0, 1, 1, 1, 0},
+	{0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	};
+	
+	vector<vector<int>> entrada_u_kevin =
+	{
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 0, 0, 0, 0, 1, 1, 0},
+	{0, 1, 1, 1, 0, 0, 1, 1, 1, 0},
+	{0, 0, 1, 1, 1, 1, 1, 1, 1, 0},
+	{0, 0, 0, 1, 1, 1, 1, 0, 1, 1},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	};
 
+	pair<vector<vector<int>>, vector<int>> par_a(entrada_a, {1,0,0,0,0});
+	pair<vector<vector<int>>, vector<int>> par_e(entrada_e, {0,1,0,0,0});
+	pair<vector<vector<int>>, vector<int>> par_i(entrada_i, {0,0,1,0,0});
+	pair<vector<vector<int>>, vector<int>> par_o(entrada_o, {0,0,0,1,0});
+	pair<vector<vector<int>>, vector<int>> par_u(entrada_u, {0,0,0,0,1});
+	
+	
+	vector<pair<vector<vector<int>>, vector<int>>> ER =
+	{
+		par_a,
+		par_e,
+		par_i,
+		par_o,
+		par_u
+	};
+	
+	
+	
+	Capa capa = Capa(5);
+	cout << "Procesando letra a" << endl;
+	capa.procesar(entrada_a);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra e" << endl;
+	capa.procesar(entrada_e);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra i" << endl;
+	capa.procesar(entrada_i);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra o" << endl;
+	capa.procesar(entrada_o);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra u" << endl;
+	capa.procesar(entrada_u);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << endl << "Entrenando..." << endl ;
+	capa.entrenar(ER);
+	cout << "Fin del Entrenamiento" << endl << endl;
+	
+	cout << "Procesando letra a" << endl;
+	capa.procesar(entrada_a);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra e" << endl;
+	capa.procesar(entrada_e);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra i" << endl;
+	capa.procesar(entrada_i);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra o" << endl;
+	capa.procesar(entrada_o);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	cout << "Procesando letra u" << endl;
+	capa.procesar(entrada_u);
+	resultadoFinal(capa.getMaximoResultado());
+	
+	
 	return 0;
 }
